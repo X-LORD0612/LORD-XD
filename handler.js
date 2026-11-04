@@ -1,13 +1,16 @@
-
 function getMessageText(message) {
   if (!message) return '';
+  const content = message.ephemeralMessage?.message ||
+    message.viewOnceMessage?.message ||
+    message.viewOnceMessageV2?.message ||
+    message;
 
   return (
-    message.conversation ||
-    message.extendedTextMessage?.text ||
-    message.imageMessage?.caption ||
-    message.videoMessage?.caption ||
-    message.documentMessage?.caption ||
+    content.conversation ||
+    content.extendedTextMessage?.text ||
+    content.imageMessage?.caption ||
+    content.videoMessage?.caption ||
+    content.documentMessage?.caption ||
     ''
   );
 }
@@ -15,30 +18,21 @@ function getMessageText(message) {
 export async function handleMessage(sock, msg, config) {
   const from = msg.key.remoteJid;
   const sender = msg.key.participant || from;
-  const text = getMessageText(msg.message).trim();
+  const body = getMessageText(msg.message).trim();
 
-  if (!text.startsWith(config.prefix)) return;
+  if (!body.startsWith(config.prefix)) return;
 
-  const args = text.slice(config.prefix.length).trim().split(/\s+/);
+  const args = body.slice(config.prefix.length).trim().split(/\s+/);
   const command = (args.shift() || '').toLowerCase();
-
   if (!command) return;
 
   const botName = config.botName || 'LORD XD';
-  const ownerName = config.ownerName || 'X LORD';
+  const ownerName = config.owner || 'X LORD';
+  const ownerNumber = String(config.ownerNumber || '').replace(/\D/g, '');
+  const senderNumber = String(sender.split('@')[0] || '').replace(/\D/g, '');
+  const isOwner = Boolean(ownerNumber && senderNumber === ownerNumber);
 
-  const ownerNumber = String(config.ownerNumber || '')
-    .replace(/\D/g, '');
-
-  const senderNumber = sender.split('@')[0].replace(/\D/g, '');
-
-  const isOwner =
-    ownerNumber && senderNumber === ownerNumber;
-
-  // Self mode
   if (config.selfMode && !isOwner) return;
-
-  // Private mode
   if (config.mode === 'private' && !isOwner) return;
 
   const reply = (message) =>
@@ -52,11 +46,11 @@ export async function handleMessage(sock, msg, config) {
     case 'alive':
       await reply(
         `╭━━〔 ${botName} 〕━━╮\n` +
-        `┃ Status: Online 🟢\n` +
+        '┃ Status: Online 🟢\n' +
         `┃ Owner: ${ownerName}\n` +
         `┃ Mode: ${config.mode}\n` +
         `┃ Host: ${config.hostingPlatform}\n` +
-        `╰━━━━━━━━━━━━━━━━╯`
+        '╰━━━━━━━━━━━━━━━━╯'
       );
       break;
 
@@ -65,7 +59,7 @@ export async function handleMessage(sock, msg, config) {
         `╭━━〔 BOT OWNER 〕━━╮\n` +
         `┃ Name: ${ownerName}\n` +
         `┃ Bot: ${botName}\n` +
-        `╰━━━━━━━━━━━━━━━━╯`
+        '╰━━━━━━━━━━━━━━━━╯'
       );
       break;
 
@@ -76,12 +70,13 @@ export async function handleMessage(sock, msg, config) {
         `┃ Prefix: ${config.prefix}\n` +
         `┃ Host: ${config.hostingPlatform}\n` +
         `┃ Mode: ${config.mode}\n` +
-        `┣━━━━━━━━━━━━━━━━\n` +
-        `┃ .ping\n` +
-        `┃ .alive\n` +
-        `┃ .owner\n` +
-        `┃ .menu\n` +
-        `╰━━━━━━━━━━━━━━━━╯`
+        '┣━━━━━━━━━━━━━━━━\n' +
+        `┃ ${config.prefix}ping\n` +
+        `┃ ${config.prefix}alive\n` +
+        `┃ ${config.prefix}owner\n` +
+        `┃ ${config.prefix}groupinfo\n` +
+        `┃ ${config.prefix}menu\n` +
+        '╰━━━━━━━━━━━━━━━━╯'
       );
       break;
 
@@ -90,15 +85,13 @@ export async function handleMessage(sock, msg, config) {
         await reply('This command only works in groups.');
         break;
       }
-
       const metadata = await sock.groupMetadata(from);
-
       await reply(
         `╭━━〔 GROUP INFO 〕━━╮\n` +
         `┃ Name: ${metadata.subject}\n` +
         `┃ Members: ${metadata.participants.length}\n` +
         `┃ Owner: ${metadata.owner || 'Unknown'}\n` +
-        `╰━━━━━━━━━━━━━━━━╯`
+        '╰━━━━━━━━━━━━━━━━╯'
       );
       break;
     }
