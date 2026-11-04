@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
+  "license": "BSL-1.0",
   "description": "LORD XD WhatsApp bot using Baileys pairing-code login",
   "scripts": {
     "start": "node index.js",
