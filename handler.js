@@ -1,101 +1,130 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { config } from './config.js';
 
-const dataDir = path.resolve('./data');
-fs.mkdirSync(dataDir, { recursive: true });
-const settingsFile = path.join(dataDir, 'groups.json');
+import { getContentType } from '@whiskeysockets/baileys';
 
-function readSettings() {
-  try { return JSON.parse(fs.readFileSync(settingsFile, 'utf8')); }
-  catch { return {}; }
-}
-function writeSettings(data) {
-  fs.writeFileSync(settingsFile, JSON.stringify(data, null, 2));
-}
-const jidNumber = jid => (jid || '').split('@')[0].split(':')[0];
-const isGroup = jid => jid?.endsWith('@g.us');
+export async function handleMessage(sock, msg, config) {
+  if (!msg.message || msg.key.fromMe) return;
 
-async function isAdmin(sock, groupJid, participant) {
-  const metadata = await sock.groupMetadata(groupJid);
-  const member = metadata.participants.find(p => p.id === participant);
-  return member?.admin === 'admin' || member?.admin === 'superadmin';
-}
-const menu = () => `╭━━〔 ${config.botName} 〕━━╮
-┃ Owner : ${config.ownerName}
-┃ Prefix: ${config.prefix}
-╰━━━━━━━━━━━━━━╯
-
-GENERAL
-${config.prefix}menu
-${config.prefix}ping
-${config.prefix}alive
-${config.prefix}owner
-${config.prefix}uptime
-${config.prefix}botinfo
-${config.prefix}groupinfo
-
-GROUP (admin only)
-${config.prefix}tagall
-${config.prefix}antilink on/off
-${config.prefix}welcome on/off
-${config.prefix}goodbye on/off`;
-
-export async function handleMessage(sock, message) {
-  if (!message.message || message.key.fromMe) return;
-  const jid = message.key.remoteJid;
+  const jid = msg.key.remoteJid;
   if (!jid || jid === 'status@broadcast') return;
 
-  const body = message.message.conversation
-    || message.message.extendedTextMessage?.text
-    || message.message.imageMessage?.caption
-    || message.message.videoMessage?.caption
-    || '';
-  if (!body.startsWith(config.prefix)) return;
+  const type = getContentType(msg.message);
 
-  const [rawCommand, ...args] = body.slice(config.prefix.length).trim().split(/\\s+/);
-  const command = (rawCommand || '').toLowerCase();
-  const sender = message.key.participant || jid;
-  const isOwner = config.ownerNumber && jidNumber(sender) === config.ownerNumber;
-  const reply = text => sock.sendMessage(jid, { text }, { quoted: message });
+  const body =
+    type === 'conversation'
+      ? msg.message.conversation
+      : type === 'extendedTextMessage'
+        ? msg.message.extendedTextMessage?.text
+        : '';
 
-  if (command === 'menu' || command === 'help') return reply(menu());
-  if (command === 'ping') return reply(`Pong! ${config.botName} is online.`);
-  if (command === 'alive') return reply(`╭━━〔 ${config.botName} 〕━━╮\\n┃ Status: Online ✓\\n┃ Owner: ${config.ownerName}\\n╰━━━━━━━━━━━━━━╯`);
-  if (command === 'owner') return reply(`Owner: ${config.ownerName}${config.ownerNumber ? `\\nWhatsApp: +${config.ownerNumber}` : ''}`);
-  if (command === 'uptime') {
-    const seconds = Math.floor(process.uptime());
-    const hours = Math.floor(seconds / 3600), minutes = Math.floor((seconds % 3600) / 60), secs = seconds % 60;
-    return reply(`Uptime: ${hours}h ${minutes}m ${secs}s`);
-  }
-  if (command === 'botinfo') return reply(`Bot: ${config.botName}\\nOwner: ${config.ownerName}\\nLibrary: Baileys\\nPrefix: ${config.prefix}`);
-  if (command === 'groupinfo') {
-    if (!isGroup(jid)) return reply('This command works in groups only.');
-    const meta = await sock.groupMetadata(jid);
-    return reply(`Group: ${meta.subject}\\nMembers: ${meta.participants.length}\\nCreated: ${meta.creation ? new Date(meta.creation * 1000).toLocaleString() : 'Unknown'}`);
-  }
+  if (!body || !body.startsWith(config.prefix)) return;
 
-  if (!isGroup(jid)) return reply('This command works in groups only.');
-  const settings = readSettings();
-  settings[jid] ||= { antilink: false, welcome: false, goodbye: false };
+  const args = body.slice(config.prefix.length).trim().split(/\s+/);
+  const command = args.shift()?.toLowerCase();
+  const extra = args.join(' ');
 
-  const botJid = sock.user?.id;
-  const senderIsAdmin = isOwner || await isAdmin(sock, jid, sender);
-  if (['tagall', 'antilink', 'welcome', 'goodbye'].includes(command) && !senderIsAdmin) {
-    return reply('Only group admins can use this command.');
-  }
+  const sender = msg.key.participant || jid;
+  const senderNumber = sender.split('@')[0];
+  const ownerNumber = (config.ownerNumber || '').replace(/\D/g, '');
 
-  if (command === 'tagall') {
-    const meta = await sock.groupMetadata(jid);
-    const text = args.join(' ') || 'Attention everyone!';
-    const mentions = meta.participants.map(p => p.id);
-    return sock.sendMessage(jid, { text: `${text}\\n\\n${mentions.map(x => '@' + jidNumber(x)).join(' ')}`, mentions }, { quoted: message });
-  }
-  if (['antilink', 'welcome', 'goodbye'].includes(command)) {
-    const value = args[0]?.toLowerCase();
-    if (!['on', 'off'].includes(value)) return reply(`Usage: ${config.prefix}${command} on/off`);
-    settings[jid][command] = value === 'on';
-    writeSettings(settings);
-    return reply(`${command} is now ${value.toUpperCase()}.`);
+  const isOwner = Boolean(
+    ownerNumber && senderNumber === ownerNumber
+  );
+
+  if (config.mode === 'private' && !isOwner) return;
+
+  const reply = (text) =>
+    sock.sendMessage(jid, { text }, { quoted: msg });
+
+  const hosting = config.hostingPlatform || 'Unknown';
+
+  switch (command) {
+    case 'ping':
+      return reply('PONG! ⚡\nLORD XD is online.');
+
+    case 'alive':
+      return reply(
+`╭━━〔 LORD XD 〕━━╮
+┃ Owner: ${config.owner}
+┃ Prefix: ${config.prefix}
+┃ Mode: ${config.mode}
+┃ Hosting: ${hosting}
+┃ Status: Online 🟢
+╰━━━━━━━━━━━━━━╯`
+      );
+
+    case 'menu':
+    case 'help':
+      return reply(
+`╭━━〔 LORD XD 〕━━╮
+┃ Owner: ${config.owner}
+┃ Prefix: ${config.prefix}
+┃ Mode: ${config.mode}
+┃ Hosting: ${hosting}
+╰━━━━━━━━━━━━━━╯
+
+╭━━ GENERAL COMMANDS ━━
+┃ .ping
+┃ .alive
+┃ .menu
+┃ .owner
+┃ .groupinfo
+┃ .tagall
+╰━━━━━━━━━━━━━━━━━━━━╯`
+      );
+
+    case 'owner':
+      return reply(
+`╭━━〔 OWNER INFO 〕━━╮
+┃ Name: ${config.owner}
+┃ Bot: LORD XD
+╰━━━━━━━━━━━━━━━━━━╯`
+      );
+
+    case 'groupinfo': {
+      if (!jid.endsWith('@g.us')) {
+        return reply('This command works in groups only.');
+      }
+
+      const metadata = await sock.groupMetadata(jid);
+
+      return reply(
+`GROUP INFORMATION
+Name: ${metadata.subject}
+Members: ${metadata.participants.length}
+Group ID: ${jid}`
+      );
+    }
+
+    case 'tagall': {
+      if (!jid.endsWith('@g.us')) {
+        return reply('Groups only!');
+      }
+
+      const metadata = await sock.groupMetadata(jid);
+
+      const member = metadata.participants.find(
+        p => p.id === sender || p.phoneNumber === sender
+      );
+
+      if (!isOwner && !member?.admin) {
+        return reply('Only group admins or bot owner can use this command.');
+      }
+
+      const mentions = metadata.participants.map(p => p.id);
+
+      return sock.sendMessage(
+        jid,
+        {
+          text:
+            `📢 LORD XD TAGALL\n\n${extra || 'Attention everyone!'}\n\n` +
+            mentions.map(id => `@${id.split('@')[0]}`).join(' '),
+          mentions
+        },
+        { quoted: msg }
+      );
+    }
+
+    default:
+      return reply('Invalid command. Type .menu');
   }
 }
