@@ -42,6 +42,7 @@ export async function handleMessage(sock, msg, config) {
   if (!from || !msg?.message) return;
   const sender = msg.key.participant || from;
   const body = getMessageText(msg.message);
+  console.log(`[DEBUG] textLength=${body.length} prefix=${JSON.stringify(config.prefix)} prefixMatched=${body.startsWith(config.prefix)}`);
   if (!body.startsWith(config.prefix)) return;
 
   const args = body.slice(config.prefix.length).trim().split(/\s+/);
