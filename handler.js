@@ -1,25 +1,47 @@
-function getMessageText(message) {
-  if (!message) return '';
-  const content = message.ephemeralMessage?.message ||
-    message.viewOnceMessage?.message ||
-    message.viewOnceMessageV2?.message ||
-    message;
+function unwrapMessage(message) {
+  let current = message;
+  for (let i = 0; i < 6 && current; i++) {
+    const next = current.ephemeralMessage?.message ||
+      current.viewOnceMessage?.message ||
+      current.viewOnceMessageV2?.message ||
+      current.viewOnceMessageV2Extension?.message ||
+      current.documentWithCaptionMessage?.message ||
+      current.editedMessage?.message;
+    if (!next) break;
+    current = next;
+  }
+  return current || {};
+}
 
+function getMessageText(message) {
+  const content = unwrapMessage(message);
+  let interactiveText = '';
+  const params = content.interactiveResponseMessage?.nativeFlowResponseMessage?.paramsJson;
+  if (params) {
+    try {
+      const parsed = JSON.parse(params);
+      interactiveText = parsed.id || parsed.title || '';
+    } catch {}
+  }
   return (
     content.conversation ||
     content.extendedTextMessage?.text ||
     content.imageMessage?.caption ||
     content.videoMessage?.caption ||
     content.documentMessage?.caption ||
+    content.buttonsResponseMessage?.selectedButtonId ||
+    content.listResponseMessage?.singleSelectReply?.selectedRowId ||
+    content.templateButtonReplyMessage?.selectedId ||
+    interactiveText ||
     ''
-  );
+  ).trim();
 }
 
 export async function handleMessage(sock, msg, config) {
-  const from = msg.key.remoteJid;
+  const from = msg?.key?.remoteJid;
+  if (!from || !msg?.message) return;
   const sender = msg.key.participant || from;
-  const body = getMessageText(msg.message).trim();
-
+  const body = getMessageText(msg.message);
   if (!body.startsWith(config.prefix)) return;
 
   const args = body.slice(config.prefix.length).trim().split(/\s+/);
@@ -30,19 +52,19 @@ export async function handleMessage(sock, msg, config) {
   const ownerName = config.owner || 'X LORD';
   const ownerNumber = String(config.ownerNumber || '').replace(/\D/g, '');
   const senderNumber = String(sender.split('@')[0] || '').replace(/\D/g, '');
-  const isOwner = Boolean(ownerNumber && senderNumber === ownerNumber);
+  const isOwner = Boolean(ownerNumber && senderNumber.endsWith(ownerNumber));
 
   if (config.selfMode && !isOwner) return;
-  if (config.mode === 'private' && !isOwner) return;
+  if (String(config.mode || 'public').toLowerCase() === 'private' && !isOwner) return;
 
-  const reply = (message) =>
+  console.log(`[COMMAND] ${command} | chat=${from.endsWith('@g.us') ? 'group' : 'private'}`);
+  const reply = async (message) =>
     sock.sendMessage(from, { text: message }, { quoted: msg });
 
   switch (command) {
     case 'ping':
       await reply('Pong! 🏓\nLORD XD is online.');
       break;
-
     case 'alive':
       await reply(
         `╭━━〔 ${botName} 〕━━╮\n` +
@@ -53,7 +75,6 @@ export async function handleMessage(sock, msg, config) {
         '╰━━━━━━━━━━━━━━━━╯'
       );
       break;
-
     case 'owner':
       await reply(
         `╭━━〔 BOT OWNER 〕━━╮\n` +
@@ -62,7 +83,6 @@ export async function handleMessage(sock, msg, config) {
         '╰━━━━━━━━━━━━━━━━╯'
       );
       break;
-
     case 'menu':
     case 'help':
       await reply(
@@ -79,7 +99,6 @@ export async function handleMessage(sock, msg, config) {
         '╰━━━━━━━━━━━━━━━━╯'
       );
       break;
-
     case 'groupinfo': {
       if (!from.endsWith('@g.us')) {
         await reply('This command only works in groups.');
@@ -95,8 +114,7 @@ export async function handleMessage(sock, msg, config) {
       );
       break;
     }
-
     default:
-      break;
+      await reply(`Unknown command. Send ${config.prefix}menu to see available commands.`);
   }
 }
