@@ -1,105 +1,149 @@
+
 import makeWASocket, {
   DisconnectReason,
-  useMultiFileAuthState,
-  fetchLatestBaileysVersion
+  useMultiFileAuthState
 } from '@whiskeysockets/baileys';
 
-import P from 'pino';
-import fs from 'node:fs';
+import pino from 'pino';
 import { config } from './config.js';
 import { handleMessage } from './handler.js';
 
-const logger = P({ level: 'info' });
-let reconnecting = false;
+let isConnecting = false;
+let reconnectTimer = null;
+
+const logger = pino({ level: 'silent' });
 
 async function startBot() {
-  fs.mkdirSync(config.sessionDir, { recursive: true });
-
-  const { state, saveCreds } =
-    await useMultiFileAuthState(config.sessionDir);
-
-  let version;
+  if (isConnecting) return;
+  isConnecting = true;
 
   try {
-    ({ version } = await fetchLatestBaileysVersion());
-  } catch {
-    logger.warn('Using default WhatsApp version');
-  }
+    console.log('╭━━〔 LORD XD 〕━━╮');
+    console.log('┃ Starting bot...');
+    console.log(`┃ Hosting: ${config.hostingPlatform}`);
+    console.log('╰━━━━━━━━━━━━━━━━╯');
 
-  const sock = makeWASocket({
-    ...(version ? { version } : {}),
-    auth: state,
-    logger,
-    printQRInTerminal: false,
-    browser: ['LORD XD', 'Chrome', '1.0.0'],
-    syncFullHistory: false,
-    markOnlineOnConnect: false
-  });
+    const { state, saveCreds } =
+      await useMultiFileAuthState(config.sessionDir);
 
-  sock.ev.on('creds.update', saveCreds);
+    const sock = makeWASocket({
+      auth: state,
+      logger,
+      markOnlineOnConnect: false,
+      syncFullHistory: false
+    });
 
-  sock.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect } = update;
+    let pairingRequested = false;
 
-    if (connection === 'open') {
-      reconnecting = false;
-      logger.info('LORD XD CONNECTED SUCCESSFULLY!');
-    }
+    sock.ev.on('creds.update', saveCreds);
 
-    if (connection === 'close') {
-      const status =
-        lastDisconnect?.error?.output?.statusCode;
+    sock.ev.on('connection.update', async (update) => {
+      const { connection, lastDisconnect, qr } = update;
 
-      if (status === DisconnectReason.loggedOut) {
-        logger.error('Session logged out. Pair again.');
-        return;
+      // Pairing code
+      if (
+        qr &&
+        !sock.authState.creds.registered &&
+        !pairingRequested
+      ) {
+        pairingRequested = true;
+
+        const number = String(config.pairingNumber || '')
+          .replace(/\D/g, '');
+
+        if (!number) {
+          console.log(
+            'ERROR: Set pairingNumber in config.js'
+          );
+          return;
+        }
+
+        try {
+          const code = await sock.requestPairingCode(number);
+
+          console.log('\n╭━━〔 LORD XD PAIRING 〕━━╮');
+          console.log(`┃ CODE: ${code}`);
+          console.log('╰━━━━━━━━━━━━━━━━━━━━━━╯');
+          console.log('Enter this code in WhatsApp Linked Devices.');
+        } catch (error) {
+          console.error('Pairing error:', error.message);
+          pairingRequested = false;
+        }
       }
 
-      if (!reconnecting) {
-        reconnecting = true;
-        logger.info('Reconnecting in 5 seconds...');
+      if (connection === 'connecting') {
+        console.log('Connecting to WhatsApp...');
+      }
 
-        setTimeout(() => {
-          reconnecting = false;
-          startBot().catch(console.error);
+      if (connection === 'open') {
+        console.log('LORD XD connected successfully!');
+
+        if (config.alwaysOnline) {
+          await sock.sendPresenceUpdate('available');
+        }
+      }
+
+      if (connection === 'close') {
+        const statusCode =
+          lastDisconnect?.error?.output?.statusCode;
+
+        isConnecting = false;
+
+        if (statusCode === DisconnectReason.loggedOut) {
+          console.log(
+            'Session logged out. Pair again to reconnect.'
+          );
+          return;
+        }
+
+        console.log('Connection closed. Reconnecting...');
+
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+        }
+
+        reconnectTimer = setTimeout(() => {
+          startBot();
         }, 5000);
       }
-    }
-  });
+    });
 
-  if (!state.creds.registered) {
-    const number = config.pairingNumber.replace(/\D/g, '');
+    // Incoming messages
+    sock.ev.on('messages.upsert', async ({ messages, type }) => {
+      if (type !== 'notify') return;
 
-    if (!number) {
-      logger.error('PAIRING_NUMBER is missing!');
-      return;
-    }
+      for (const msg of messages) {
+        try {
+          if (!msg.message || msg.key.fromMe) continue;
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+          if (config.autoRead) {
+            await sock.readMessages([msg.key]);
+          }
 
-    try {
-      const code = await sock.requestPairingCode(number);
-      logger.info(`PAIRING CODE: ${code}`);
-      logger.info('Enter this code in WhatsApp Linked Devices.');
-    } catch (error) {
-      logger.error(error, 'Pairing code failed');
-    }
-  }
+          const botConfig = {
+            ...config,
+            owner: config.owner ?? config.ownerName
+          };
 
-  sock.ev.on('messages.upsert', async ({ messages, type }) => {
-    if (type !== 'notify') return;
+          await handleMessage(sock, msg, botConfig);
 
-    for (const message of messages) {
-      try {
-        await handleMessage(sock, message, config);
-      } catch (error) {
-        logger.error(error);
+        } catch (error) {
+          console.error('Message error:', error.message);
+        }
       }
+    });
+
+  } catch (error) {
+    console.error('Startup error:', error);
+
+    isConnecting = false;
+
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
     }
-  });
+
+    reconnectTimer = setTimeout(startBot, 5000);
+  }
 }
 
-startBot().catch(error => {
-  logger.error(error);
-  process.exit(1);
-});
+startBot();
