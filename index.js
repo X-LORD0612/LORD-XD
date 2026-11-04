@@ -83,6 +83,7 @@ async function startBot() {
 
     sock.ev.on('messages.upsert', async ({ messages, type }) => {
       if (type !== 'notify') return;
+      console.log(`[MESSAGES] Received ${messages.length} new message(s).`);
       for (const msg of messages) {
         try {
           if (!msg.message || msg.key.fromMe) continue;
