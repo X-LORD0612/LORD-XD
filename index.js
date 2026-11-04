@@ -1,98 +1,105 @@
 import makeWASocket, {
   DisconnectReason,
   useMultiFileAuthState,
-  fetchLatestBaileysVersion,
-  makeCacheableSignalKeyStore,
+  fetchLatestBaileysVersion
 } from '@whiskeysockets/baileys';
-import pino from 'pino';
+
+import P from 'pino';
 import fs from 'node:fs';
-import path from 'node:path';
 import { config } from './config.js';
 import { handleMessage } from './handler.js';
 
-const logger = pino({ level: process.env.LOG_LEVEL || 'silent' });
-const storePath = path.resolve('./data');
-fs.mkdirSync(storePath, { recursive: true });
-
+const logger = P({ level: 'info' });
 let reconnecting = false;
 
 async function startBot() {
-  const { state, saveCreds } = await useMultiFileAuthState(config.sessionDir);
-  const { version } = await fetchLatestBaileysVersion();
+  fs.mkdirSync(config.sessionDir, { recursive: true });
 
-  const sock = makeWASocket({
-    version,
-    logger,
-    printQRInTerminal: false,
-    auth: {
-      creds: state.creds,
-      keys: makeCacheableSignalKeyStore(state.keys, logger),
-    },
-    browser: ['LORD XD', 'Chrome', '1.0.0'],
-    markOnlineOnConnect: false,
-    syncFullHistory: false,
-    getMessage: async () => undefined,
-  });
+  const { state, saveCreds } =
+    await useMultiFileAuthState(config.sessionDir);
 
-  if (!sock.authState.creds.registered) {
-    const number = config.pairingNumber || (await askPairingNumber());
-    if (!/^\\d{10,15}$/.test(number)) {
-      throw new Error('PAIRING_NUMBER must include country code and contain 10-15 digits.');
-    }
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    const code = await sock.requestPairingCode(number);
-    console.log('\\n================================');
-    console.log(' LORD XD PAIRING CODE:', code);
-    console.log(' Enter this code in WhatsApp > Linked devices > Link a device.');
-    console.log('================================\\n');
+  let version;
+
+  try {
+    ({ version } = await fetchLatestBaileysVersion());
+  } catch {
+    logger.warn('Using default WhatsApp version');
   }
 
-  sock.ev.on('creds.update', saveCreds);
-  sock.ev.on('messages.upsert', async ({ messages, type }) => {
-    if (type !== 'notify') return;
-    for (const message of messages) {
-      try {
-        await handleMessage(sock, message);
-      } catch (error) {
-        logger.error({ err: error }, 'Message handler error');
-      }
-    }
+  const sock = makeWASocket({
+    ...(version ? { version } : {}),
+    auth: state,
+    logger,
+    printQRInTerminal: false,
+    browser: ['LORD XD', 'Chrome', '1.0.0'],
+    syncFullHistory: false,
+    markOnlineOnConnect: false
   });
 
-  sock.ev.on('connection.update', ({ connection, lastDisconnect }) => {
+  sock.ev.on('creds.update', saveCreds);
+
+  sock.ev.on('connection.update', async (update) => {
+    const { connection, lastDisconnect } = update;
+
     if (connection === 'open') {
       reconnecting = false;
-      console.log('LORD XD connected successfully.');
+      logger.info('LORD XD CONNECTED SUCCESSFULLY!');
     }
-    if (connection === 'close' && !reconnecting) {
-      const status = lastDisconnect?.error?.output?.statusCode;
-      const loggedOut = status === DisconnectReason.loggedOut;
-      if (!loggedOut) {
+
+    if (connection === 'close') {
+      const status =
+        lastDisconnect?.error?.output?.statusCode;
+
+      if (status === DisconnectReason.loggedOut) {
+        logger.error('Session logged out. Pair again.');
+        return;
+      }
+
+      if (!reconnecting) {
         reconnecting = true;
-        console.log('Connection closed. Reconnecting...');
-        setTimeout(() => startBot().catch(err => {
+        logger.info('Reconnecting in 5 seconds...');
+
+        setTimeout(() => {
           reconnecting = false;
-          logger.error({ err }, 'Reconnect failed');
-        }), 3000);
-      } else {
-        console.error('Session logged out. Remove session folder and pair again.');
+          startBot().catch(console.error);
+        }, 5000);
+      }
+    }
+  });
+
+  if (!state.creds.registered) {
+    const number = config.pairingNumber.replace(/\D/g, '');
+
+    if (!number) {
+      logger.error('PAIRING_NUMBER is missing!');
+      return;
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    try {
+      const code = await sock.requestPairingCode(number);
+      logger.info(`PAIRING CODE: ${code}`);
+      logger.info('Enter this code in WhatsApp Linked Devices.');
+    } catch (error) {
+      logger.error(error, 'Pairing code failed');
+    }
+  }
+
+  sock.ev.on('messages.upsert', async ({ messages, type }) => {
+    if (type !== 'notify') return;
+
+    for (const message of messages) {
+      try {
+        await handleMessage(sock, message, config);
+      } catch (error) {
+        logger.error(error);
       }
     }
   });
 }
 
-async function askPairingNumber() {
-  const readline = await import('node:readline/promises');
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  const answer = (await rl.question('WhatsApp number with country code (digits only): ')).trim();
-  rl.close();
-  return answer.replace(/\\D/g, '');
-}
-
-process.on('uncaughtException', error => logger.error({ err: error }, 'Uncaught exception'));
-process.on('unhandledRejection', error => logger.error({ err: error }, 'Unhandled rejection'));
-
 startBot().catch(error => {
-  console.error('Bot startup failed:', error.message);
-  process.exitCode = 1;
+  logger.error(error);
+  process.exit(1);
 });
