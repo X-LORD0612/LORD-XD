@@ -1,17 +1,20 @@
 import 'dotenv/config';
 
+const asBool = (value, fallback = false) => {
+  if (value === undefined || value === '') return fallback;
+  return ['1', 'true', 'yes', 'on'].includes(String(value).toLowerCase());
+};
+
 export const config = {
-  botName: 'LORD XD',
-
-  owner: 'X LORD',
+  botName: process.env.BOT_NAME || 'LORD XD',
+  owner: process.env.OWNER_NAME || 'X LORD',
   ownerNumber: process.env.OWNER_NUMBER || '',
-
-  prefix: '.',
-
-  mode: process.env.MODE || 'public',
-
-  hostingPlatform:
-    process.env.HOSTING_PLATFORM || 'KataBump',
-
-  sessionDir: './session'
+  prefix: process.env.PREFIX || '.',
+  mode: (process.env.MODE || 'public').toLowerCase(),
+  hostingPlatform: process.env.HOSTING_PLATFORM || 'KataBump',
+  pairingNumber: process.env.PAIRING_NUMBER || '',
+  sessionDir: process.env.SESSION_DIR || './session',
+  autoRead: asBool(process.env.AUTO_READ, false),
+  alwaysOnline: asBool(process.env.ALWAYS_ONLINE, false),
+  selfMode: asBool(process.env.SELF_MODE, false)
 };
