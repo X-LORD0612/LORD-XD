@@ -20,7 +20,7 @@ async function startBot() {
   try {
     console.log('╭━━〔 LORD XD 〕━━╮');
     console.log('┃ Starting bot...');
-    console.log('┃ Hosting: ' + config.hostingPlatform);
+    if (config.hostingPlatform) console.log('┃ Hosting: ' + config.hostingPlatform);
     console.log('╰━━━━━━━━━━━━━━━━╯');
 
     const { state, saveCreds } = await useMultiFileAuthState(config.sessionDir);
