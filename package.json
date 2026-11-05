@@ -1,10 +1,10 @@
 {
   "name": "lord-xd",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "private": true,
   "license": "BSL-1.0",
-  "description": "LORD XD WhatsApp bot using Baileys pairing-code login",
+  "description": "LORD XD WhatsApp bot with QR and pairing-code login",
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js"
@@ -15,6 +15,7 @@
   "dependencies": {
     "@whiskeysockets/baileys": "7.0.0-rc14",
     "dotenv": "^16.4.7",
-    "pino": "^9.6.0"
+    "pino": "^9.6.0",
+    "qrcode-terminal": "^0.12.0"
   }
 }
