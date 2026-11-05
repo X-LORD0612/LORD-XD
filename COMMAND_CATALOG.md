@@ -66,3 +66,16 @@ The supplied transcript includes `tomp3`. The remainder of this category was not
 ## Important
 
 This catalog preserves the menu supplied by the project owner. It does not add non-existent handlers or claim that the listed features are already operational.
+
+
+## Implementation update (November 2026)
+
+The following commands have now been added to the source code:
+- General: `ping`, `alive`, `owner`, `botinfo`, `uptime`, `menu`, `help`
+- Group information: `groupinfo`, `groupstats`
+- Group admin: `tagall`, `hidetag`, `kick`, `promote`, `demote`
+- Group protection: `antilink on/off`, `welcome on/off`, `goodbye on/off`
+
+Group settings persist in `data/group-settings.json`. Anti-link deletion requires the bot to be a group admin. Participant-management commands require both an authorized group admin/owner and the bot to be a group admin. Welcome/goodbye event messages require the bot to remain connected.
+
+This is a first functional implementation, not completion of every command in the original menu. AI, social-media, music, search, Telegram, and most conversion commands remain integration work and are not advertised as operational.
