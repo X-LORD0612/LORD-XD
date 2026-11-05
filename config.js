@@ -11,7 +11,7 @@ export const config = {
   ownerNumber: process.env.OWNER_NUMBER || '',
   prefix: process.env.PREFIX || '.',
   mode: (process.env.MODE || 'public').toLowerCase(),
-  hostingPlatform: process.env.HOSTING_PLATFORM || 'KataBump',
+  hostingPlatform: process.env.HOSTING_PLATFORM || '',
   pairingNumber: process.env.PAIRING_NUMBER || '',
   sessionDir: process.env.SESSION_DIR || './session',
   autoRead: asBool(process.env.AUTO_READ, false),
