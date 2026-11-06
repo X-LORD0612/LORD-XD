@@ -1,59 +1,80 @@
-# LORD XD WhatsApp Bot
+<div align="center">
+  <h1>JUNE-X ULTRA</h1>
+  <a href="https://git.io/typing-svg">
+    <img src="https://readme-typing-svg.demolab.com?font=Rockwell&size=45&pause=1000&color=33ff00&center=true&width=800&height=80&lines=June-Official;Multi+Device+Whatsapp+Bot;Made+by+Supreme" alt="Typing SVG" />
+  </a>
+</div>
 
-LORD XD is a Node.js WhatsApp bot built with Baileys pairing-code login.
+<div align="center">
+  <img src="https://u.pone.rs/owkxihtz.jpeg" alt="JUNE X" height="250">
+</div>
 
-## Requirements
+---
 
-- Node.js 20+
-- A WhatsApp account to link
-- A trusted host with persistent storage for the session and group settings
+<div align="center">
+  <img src="https://readme-typing-svg.demolab.com/?lines=The+bot+supports+deployment;On+all+free+panels+easily" alt="Typing SVG" />
+</div>
 
-## Setup
+---
 
-1. Clone or upload this repository to a **private** GitHub repository.
-2. Install packages: `npm install`.
-3. Copy `.env.example` to `.env`.
-4. Set `OWNER_NUMBER` and `PAIRING_NUMBER` to full phone numbers with country code, digits only. Set a strong, private owner number.
-5. Start the bot with `npm start`.
-6. Copy the pairing code from the server console. In WhatsApp, open **Linked devices → Link a device → Link with phone number instead**, then enter the code.
+> Quick Actions
 
-For a hosting panel, select Node.js 20+, use `npm install` as the install command and `npm start` as the start command. Set environment variables in the panel rather than uploading a real `.env` file.
+<div align="center">
 
-## Implemented commands
+| Action | Link |
+|--------|------|
+| **Fork Repository** | <a href="https://github.com/Vinpink2/June-Ultra/fork"><img src="https://img.shields.io/badge/Fork%20Repo-24292e?style=for-the-badge&logo=github&logoColor=white"/></a> |
+| **Download ZIP** | <a href="https://github.com/Vinpink2/June-Ultra/archive/refs/heads/main.zip"><img src="https://img.shields.io/badge/Download-2ea043?style=for-the-badge&logo=github&logoColor=white"/></a> |
 
-| Command | Description | Access |
-|---|---|---|
-| `.ping` | Bot response test | Everyone |
-| `.alive` | Connection/status message | Everyone |
-| `.uptime` | Process uptime | Everyone |
-| `.botinfo` | Basic bot information | Everyone |
-| `.owner` | Owner label | Everyone |
-| `.menu`, `.help` | Implemented command menu | Everyone |
-| `.groupinfo`, `.groupstats` | Group name, member and admin counts | Group |
-| `.tagall`, `.hidetag` | Mention group participants | Group admins / owner |
-| `.kick`, `.promote`, `.demote` | Group participant management | Group admins / owner; bot must be admin |
-| `.antilink on/off` | Delete ordinary group link messages | Group admins / owner; bot must be admin to delete |
-| `.welcome on/off` | Welcome new group participants | Group admins / owner |
-| `.goodbye on/off` | Announce participants who leave | Group admins / owner |
+</div>
 
-Group settings are stored in `data/group-settings.json`. Keep this directory on persistent host storage; it is ignored by Git.
+---
 
-## Not yet integrated
+> 🌐 Deployment Options
 
-The larger command catalog is preserved in [COMMAND_CATALOG.md](./COMMAND_CATALOG.md). AI providers, web search, image generation, social-media downloads, music services, Telegram, and the remaining conversion commands are **not implemented in this build**. They need provider integrations, API credentials, and testing. The bot responds honestly when one of these catalog-only commands is called.
+<div align="center">
 
-## Security and permissions
+| Platform | Button |
+|----------|--------|
+| **Heroku** | <a href="https://dashboard.heroku.com/new?template=https://github.com/Vinpink2/June-Ultra"><img src="https://img.shields.io/badge/Heroku-6762A6?style=for-the-badge&logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTIyLjExIDYuMjY4Yy0xLjA0Mi0yLjM1Ni0zLjA3Ny00LjQ5LTUuNTQ0LTUuNjYyQzE0Ljk4NC4yNyAxMy4zNTUgMCAxMS45OTkgMGMtMS4zNTYgMC0yLjk4NS4yNy00LjU2Ny42MDZDMi45NjUgMS43NzguOTI4IDMuOTEyLS4xMTMgNi4yNjgtLjQyNyA3LjI1LS41IDguMjczLS41IDkuMzI3YzAgMS4wNTUuMDcyIDIuMDc4LjM4NyAzLjA2IDEuMDQyIDIuMzU2IDMuMDc3IDQuNDkxIDUuNTQ1IDUuNjYzIDEuNTgyLjMzNSAzLjIxMS42MDYgNC41NjcuNjA2IDEuMzU2IDAgMi45ODUtLjI3IDQuNTY3LS42MDYgMi40NjctMS4xNzIgNC41MDItMy4zMDYgNS41NDQtNS42NjMuMzE1LS45ODMuMzg3LTIuMDA2LjM4Ny0zLjA2IDAtMS4wNTUtLjA3Mi0yLjA3OC0uMzg3LTMuMDZ6bS0xMC4xMTEgNi40N2wtMy4xMDMgMy4xMDMtMS41NC0xLjU0IDMuMTAzLTMuMTA0LTMuMTAzLTMuMTAzIDEuNTQtMS41NCAzLjEwMyAzLjEwMyAzLjEwMy0zLjEwMyAxLjU0IDEuNTQtMy4xMDMgMy4xMDMgMy4xMDMgMy4xMDQtMS41NCAxLjU0LTMuMTAzLTMuMTAzeiIvPjwvc3ZnPg==&logoColor=white"/></a> |
+| **Railway** | <a href="https://railway.app/new"><img src="https://img.shields.io/badge/Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white"/></a> |
+| **Render** | <a href="https://render.com"><img src="https://img.shields.io/badge/Render-0099ff?style=for-the-badge&logo=render&logoColor=white"/></a> |
+| **Koyeb (Docker)** | <a href="https://app.koyeb.com/deploy?type=git&repository=github.com/Vinpink2/June-Ultra&branch=main&builder=dockerfile"><img src="https://img.shields.io/badge/Koyeb-6C4CF1?style=for-the-badge&logo=koyeb&logoColor=white"/></a> |
+| **CypherXHost** | <a href="https://platform.cypherx.store/register?ref=REPLI2955E16C9A"><img src="https://img.shields.io/badge/CypherX-007BFF?style=for-the-badge&logo=serverfault&logoColor=white"/></a> |
+| **JuneHosting** | <a href="https://host.junex.space"><img src="https://img.shields.io/badge/JuneHost-0B0D0E?style=for-the-badge&logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZmZmZiI+PHBhdGggZD0iTTExLjA2ODMgMi44OTk2OFYyMi4yOTczbC0yLjExMzk5IDEuNzAyNjVWNy44NjM4SDQuOTc1bDYuMDkzMy00Ljk2NDEyek0xNC45MzQyNiAwdjE1Ljc2NzI0SDE5LjAyNWwtNi4yMDA0NCA1LjA4ODY1VjEuNDY4OUwxNC45MzQyNiAweiIvPjwvc3ZnPg==&logoColor=white"/></a> |
 
-- Keep the repository private if it contains project-specific configuration.
-- Never commit `.env`, `session/`, or `data/`. The included `.gitignore` excludes them.
-- Never share pairing codes or session files. Anyone with the session can control the linked WhatsApp account.
-- Admin commands check group-admin status; participant-changing commands also require the bot to be a group admin.
-- Use moderation tools only in groups where you have permission. WhatsApp may restrict accounts for abusive automation.
-- Use a persistent, trusted host. Do not run this bot from an untrusted public machine.
+</div>
 
-## Operational notes
+---
 
-- This project uses Baileys and is an unofficial WhatsApp Web client, not an official WhatsApp Business API integration.
-- The bot must remain online for commands and welcome/goodbye events to run.
-- Test in a private test group before enabling anti-link or moderation features.
-- This repository has not been deployed or connected to a WhatsApp account by this documentation update.
+> 🔑 Session & Pairing
+
+<div align="center">
+
+| Method | Button |
+|--------|--------|
+| **Pair 1** | <a href="https://burning-lorena-eminentbo-ede53cc1.koyeb.app/"><img src="https://img.shields.io/badge/Pair%201-1a1a4e?style=for-the-badge&logo=whatsapp&logoColor=white"/></a> |
+| **Pair 2** | <a href="https://pair1.junex.space"><img src="https://img.shields.io/badge/Pair%202-1a1a4e?style=for-the-badge&logo=whatsapp&logoColor=white"/></a> |
+| **QR Code** | <a href="https://burning-lorena-eminentbo-ede53cc1.koyeb.app/pair"><img src="https://img.shields.io/badge/QR%20Code-1a1a4e?style=for-the-badge&logo=whatsapp&logoColor=white"/></a> |
+
+</div>
+
+---
+
+> 💬 Support & Community
+
+<div align="center">
+
+| Platform | Link |
+|----------|------|
+| **WhatsApp Group** | <a href="https://whatsapp.com/channel/0029VbBzXBN2kNFoxm7LiG3Q"><img src="https://img.shields.io/badge/WhatsApp%20Group-25D366?style=for-the-badge&logo=whatsapp&logoColor=white"/></a> |
+| **YouTube** | <a href="https://www.youtube.com/@Suprem_e_Lord"><img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white"/></a> |
+| **Telegram** | <a href="https://t.me/supremLord"><img src="https://img.shields.io/badge/Telegram-0088cc?style=for-the-badge&logo=telegram&logoColor=white"/></a> |
+
+</div>
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ by <a href="https://github.com/Vinpink2">Supreme</a></sub>
+</div>
