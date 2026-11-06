@@ -24,7 +24,7 @@
   },
   "env": {
     "SESSION_ID": {
-      "description": "JuneX Ultra v3.0.1 session token (JUNE-X~...) — get yours on the pairing page",
+      "description": "WhatsApp session token for your LORD XD bot.",
       "required": true,
       "value": ""
     }
