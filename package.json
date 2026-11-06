@@ -1,7 +1,7 @@
 {
-    "name": "june-x-ultra",
+    "name": "lord-xd",
     "version": "3.0.4",
-    "description": "WhatsApp MD-Style Multi-Command Bot by Supreme",
+    "description": "LORD XD WhatsApp Multi-Device Bot",
     "main": "index.js",
     "type": "commonjs",
     "scripts": {
@@ -11,12 +11,12 @@
     },
     "keywords": [
         "whatsapp bot",
-        "June-Ultra",
+        "LORD XD",
         "bot",
         "baileys",
-        "library"
+        "multi-device"
     ],
-    "author": "AgentX",
+    "author": "LORD XD",
     "license": "MIT",
     "engines": {
         "node": ">=24.x",
