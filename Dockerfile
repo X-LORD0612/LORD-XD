@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 #
-# June-X Ultra (loader distribution) — container image.
+# LORD XD (loader distribution) — container image.
 # Node 20 is pinned on purpose: better-sqlite3 11.10.0 is validated on it.
 # Do not bump the major without retesting the native build.
 #
